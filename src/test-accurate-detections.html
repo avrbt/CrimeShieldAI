@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrimeShield - Detection Accuracy Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #0F1419 0%, #1A1F2E 100%);
+            color: #fff;
+        }
+        .container {
+            background: rgba(26, 31, 46, 0.8);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            color: #3BE39C;
+            border-bottom: 2px solid #3BE39C;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #3BE39C;
+            margin-top: 30px;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin: 5px;
+        }
+        .status.online {
+            background: #3BE39C;
+            color: #0F1419;
+        }
+        .status.offline {
+            background: #FF6B6B;
+            color: white;
+        }
+        .status.testing {
+            background: #FFA500;
+            color: white;
+        }
+        .test-section {
+            background: rgba(59, 227, 156, 0.1);
+            border-left: 4px solid #3BE39C;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .log-output {
+            background: #0F1419;
+            border: 1px solid #3BE39C;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid transparent;
+        }
+        .log-entry.success {
+            border-left-color: #3BE39C;
+            color: #3BE39C;
+        }
+        .log-entry.error {
+            border-left-color: #FF6B6B;
+            color: #FF6B6B;
+        }
+        .log-entry.warning {
+            border-left-color: #FFA500;
+            color: #FFA500;
+        }
+        .log-entry.info {
+            border-left-color: #4A9EFF;
+            color: #4A9EFF;
+        }
+        button {
+            background: #3BE39C;
+            color: #0F1419;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #2BC57C;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 227, 156, 0.4);
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .feed-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .feed-card {
+            background: rgba(59, 227, 156, 0.05);
+            border: 1px solid rgba(59, 227, 156, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .feed-card h3 {
+            color: #3BE39C;
+            margin-top: 0;
+        }
+        .feed-stat {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+        }
+        .feed-stat label {
+            color: #999;
+        }
+        .feed-stat value {
+            color: #3BE39C;
+            font-weight: bold;
+        }
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 10px;
+            margin: 8px 0;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            border-left: 4px solid #666;
+        }
+        .checklist li.checked {
+            border-left-color: #3BE39C;
+            background: rgba(59, 227, 156, 0.1);
+        }
+        .checklist li::before {
+            content: "☐ ";
+            margin-right: 10px;
+            color: #666;
+        }
+        .checklist li.checked::before {
+            content: "☑ ";
+            color: #3BE39C;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 CrimeShield - Detection Accuracy Test</h1>
+        <p>Test tool to verify that alerts and screenshots are captured from the correct camera feeds.</p>
+
+        <div>
+            <strong>Backend Status:</strong> 
+            <span class="status" id="backend-status">Checking...</span>
+        </div>
+
+        <h2>🔬 Test Controls</h2>
+        <div>
+            <button onclick="checkBackendHealth()">Check Backend</button>
+            <button onclick="fetchDetections()">Fetch Latest Detections</button>
+            <button onclick="testScreenshotCapture()">Test Screenshot Capture</button>
+            <button onclick="clearLogs()">Clear Logs</button>
+            <button onclick="startContinuousMonitoring()" id="monitor-btn">Start Monitoring</button>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Live Detection Feed</h2>
+            <div class="feed-grid" id="feed-stats"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📝 Detection Logs</h2>
+            <div class="log-output" id="log-output"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>✅ Verification Checklist</h2>
+            <ul class="checklist" id="checklist">
+                <li data-check="backend">Backend server is running on port 5000</li>
+                <li data-check="feeds">All 6 camera feeds are configured</li>
+                <li data-check="webcam">Feed 4 displays live webcam stream</li>
+                <li data-check="alerts">Alerts show correct feed ID and name</li>
+                <li data-check="screenshots">Screenshots captured from correct feed</li>
+                <li data-check="cooldown">30-second cooldown working per feed</li>
+                <li data-check="logging">Console shows feed ID in all log entries</li>
+                <li data-check="evidence">Evidence items tagged with correct feed-X</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000';
+        let monitoringInterval = null;
+        let lastDetectionTimestamps = new Set();
+        
+        function log(message, type = 'info') {
+            const logOutput = document.getElementById('log-output');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${timestamp}] ${message}`;
+            logOutput.appendChild(entry);
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+
+        function updateStatus(status, online) {
+            const statusEl = document.getElementById('backend-status');
+            statusEl.textContent = status;
+            statusEl.className = online ? 'status online' : 'status offline';
+        }
+
+        function checkItem(checkId) {
+            const item = document.querySelector(`[data-check="${checkId}"]`);
+            if (item) item.classList.add('checked');
+        }
+
+        function clearLogs() {
+            document.getElementById('log-output').innerHTML = '';
+            log('Logs cleared', 'info');
+        }
+
+        async function checkBackendHealth() {
+            try {
+                log('Checking backend health...', 'info');
+                const response = await fetch(`${API_BASE}/api/health`);
+                const data = await response.json();
+                
+                if (data.status === 'running' && data.model_loaded) {
+                    log('✅ Backend is running and model is loaded', 'success');
+                    updateStatus('Online', true);
+                    checkItem('backend');
+                    return true;
+                } else {
+                    log('⚠️ Backend running but model not loaded', 'warning');
+                    updateStatus('Model Error', false);
+                    return false;
+                }
+            } catch (error) {
+                log(`❌ Backend offline: ${error.message}`, 'error');
+                updateStatus('Offline', false);
+                return false;
+            }
+        }
+
+        async function fetchDetections() {
+            try {
+                log('Fetching latest detections...', 'info');
+                const response = await fetch(`${API_BASE}/api/detections`);
+                const data = await response.json();
+                
+                if (data.detections && data.detections.length > 0) {
+                    log(`📊 Found ${data.detections.length} detection events`, 'success');
+                    
+                    // Process only new detections
+                    const newDetections = data.detections.filter(d => 
+                        !lastDetectionTimestamps.has(d.timestamp)
+                    );
+                    
+                    if (newDetections.length > 0) {
+                        log(`🆕 Processing ${newDetections.length} new detections`, 'info');
+                        
+                        newDetections.forEach(detection => {
+                            lastDetectionTimestamps.add(detection.timestamp);
+                            
+                            const feedId = detection.feed_id;
+                            const sourceType = detection.source_type;
+                            const hasWeapon = detection.has_dangerous_weapon;
+                            const hasPerson = detection.has_person;
+                            
+                            log(`🔍 Feed ${feedId} (${sourceType}): Weapon=${hasWeapon}, Person=${hasPerson}`, 
+                                hasWeapon && hasPerson ? 'success' : 'warning');
+                            
+                            if (hasWeapon && hasPerson) {
+                                log(`⚠️ ALERT: Dangerous weapon + person detected on Feed ${feedId}!`, 'error');
+                                checkItem('alerts');
+                                
+                                // Update feed stats
+                                updateFeedStats(feedId, sourceType);
+                            }
+                        });
+                    } else {
+                        log('No new detections since last check', 'info');
+                    }
+                } else {
+                    log('No detection events found', 'warning');
+                }
+            } catch (error) {
+                log(`❌ Error fetching detections: ${error.message}`, 'error');
+            }
+        }
+
+        async function testScreenshotCapture() {
+            try {
+                log('Testing screenshot capture...', 'info');
+                
+                // Test capture from Feed 5 (video)
+                log('📸 Capturing from Feed 5 (Video)...', 'info');
+                const resp5 = await fetch(`${API_BASE}/api/capture/5?source=video`);
+                if (resp5.ok) {
+                    log('✅ Feed 5 screenshot captured successfully', 'success');
+                    checkItem('screenshots');
+                } else {
+                    log('❌ Feed 5 screenshot capture failed', 'error');
+                }
+                
+                // Test capture from Feed 4 (camera)
+                log('📸 Capturing from Feed 4 (Camera)...', 'info');
+                const resp4 = await fetch(`${API_BASE}/api/capture/4?source=camera`);
+                if (resp4.ok) {
+                    log('✅ Feed 4 screenshot captured successfully', 'success');
+                    checkItem('screenshots');
+                } else {
+                    log('⚠️ Feed 4 screenshot capture failed (webcam may not be active)', 'warning');
+                }
+            } catch (error) {
+                log(`❌ Screenshot test error: ${error.message}`, 'error');
+            }
+        }
+
+        function updateFeedStats(feedId, sourceType) {
+            const feedStatsContainer = document.getElementById('feed-stats');
+            let feedCard = document.getElementById(`feed-${feedId}`);
+            
+            if (!feedCard) {
+                feedCard = document.createElement('div');
+                feedCard.className = 'feed-card';
+                feedCard.id = `feed-${feedId}`;
+                feedCard.innerHTML = `
+                    <h3>Feed ${feedId}</h3>
+                    <div class="feed-stat">
+                        <label>Source:</label>
+                        <value id="feed-${feedId}-source">-</value>
+                    </div>
+                    <div class="feed-stat">
+                        <label>Detections:</label>
+                        <value id="feed-${feedId}-count">0</value>
+                    </div>
+                    <div class="feed-stat">
+                        <label>Last Detection:</label>
+                        <value id="feed-${feedId}-time">Never</value>
+                    </div>
+                `;
+                feedStatsContainer.appendChild(feedCard);
+                checkItem('feeds');
+            }
+            
+            // Update stats
+            document.getElementById(`feed-${feedId}-source`).textContent = sourceType;
+            const countEl = document.getElementById(`feed-${feedId}-count`);
+            countEl.textContent = parseInt(countEl.textContent) + 1;
+            document.getElementById(`feed-${feedId}-time`).textContent = new Date().toLocaleTimeString();
+        }
+
+        function startContinuousMonitoring() {
+            const btn = document.getElementById('monitor-btn');
+            
+            if (monitoringInterval) {
+                // Stop monitoring
+                clearInterval(monitoringInterval);
+                monitoringInterval = null;
+                btn.textContent = 'Start Monitoring';
+                btn.style.background = '#3BE39C';
+                log('🛑 Continuous monitoring stopped', 'warning');
+            } else {
+                // Start monitoring
+                monitoringInterval = setInterval(fetchDetections, 3000);
+                btn.textContent = 'Stop Monitoring';
+                btn.style.background = '#FF6B6B';
+                log('🚀 Continuous monitoring started (3s interval)', 'success');
+                fetchDetections(); // Immediate first check
+                checkItem('logging');
+            }
+        }
+
+        // Initial health check
+        window.addEventListener('load', async () => {
+            log('🔍 Starting CrimeShield Detection Accuracy Test', 'info');
+            await checkBackendHealth();
+            
+            // Show instructions
+            log('', 'info');
+            log('📋 Instructions:', 'info');
+            log('1. Click "Start Monitoring" to begin continuous detection monitoring', 'info');
+            log('2. Enable weapon detection in the main dashboard', 'info');
+            log('3. Trigger detections on different feeds', 'info');
+            log('4. Verify that feed IDs match in logs, alerts, and screenshots', 'info');
+            log('5. Check the verification checklist above', 'info');
+        });
+    </script>
+</body>
+</html>

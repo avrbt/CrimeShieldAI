@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple CrimeShield API Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .box {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        h1 { color: #10b981; }
+        h2 { color: #3b82f6; font-size: 1.1em; margin-top: 0; }
+        button {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px 5px 10px 0;
+            font-size: 14px;
+        }
+        button:hover { background: #059669; }
+        button:disabled { background: #4b5563; cursor: not-allowed; }
+        .result {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+            white-space: pre-wrap;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+        .success { border-color: #10b981; color: #6ee7b7; }
+        .error { border-color: #ef4444; color: #fca5a5; }
+        .info { color: #94a3b8; font-size: 13px; line-height: 1.6; }
+        .status { 
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin: 5px 0;
+        }
+        .status.ok { background: #065f46; color: #6ee7b7; }
+        .status.fail { background: #7f1d1d; color: #fca5a5; }
+        input {
+            background: #0f172a;
+            border: 1px solid #475569;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            width: 100%;
+            max-width: 400px;
+            margin: 5px 0;
+        }
+        label { display: block; margin-top: 10px; color: #cbd5e1; }
+        code { background: #0f172a; padding: 2px 6px; border-radius: 3px; color: #10b981; }
+    </style>
+</head>
+<body>
+    <h1>🛡️ CrimeShield API Quick Test</h1>
+    
+    <div class="box">
+        <h2>Configuration</h2>
+        <div class="info">
+            <p><strong>Project ID:</strong> <code>lfksrwqamtfqrexoxlnp</code></p>
+            <p><strong>Supabase URL:</strong> <code>https://lfksrwqamtfqrexoxlnp.supabase.co</code></p>
+            <p><strong>Anon Key:</strong> <code>eyJhbGciOiJI...WZ9VtUx24DM...</code></p>
+            <p><strong>Function Name:</strong> <code>make-server-cfc8313f</code></p>
+        </div>
+    </div>
+
+    <div class="box">
+        <h2>Step 1: Test Health Check</h2>
+        <p class="info">This tests if the edge function is deployed and accessible.</p>
+        <button onclick="testHealth()">🔍 Test Health Endpoint</button>
+        <div id="healthResult"></div>
+    </div>
+
+    <div class="box">
+        <h2>Step 2: Test Signup</h2>
+        <p class="info">This tests user registration (only works if health check passes).</p>
+        
+        <label>Email:</label>
+        <input type="email" id="email" value="test@example.com" />
+        
+        <label>Password:</label>
+        <input type="password" id="password" value="password123" />
+        
+        <br><br>
+        <button onclick="testSignup()">📝 Test Signup</button>
+        <div id="signupResult"></div>
+    </div>
+
+    <div class="box">
+        <h2>Diagnostics</h2>
+        <div id="diagnostics" class="info">
+            <p>Click buttons above to run tests...</p>
+        </div>
+    </div>
+
+    <script>
+        const PROJECT_ID = 'lfksrwqamtfqrexoxlnp';
+        const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxma3Nyd3FhbXRmcXJleG94bG5wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE5NTcwMjAsImV4cCI6MjA3NzUzMzAyMH0.WZ9VtUx24DMuRFJh0ZluYwjNTBhUyjVRlgQE7WS6iqA';
+        const BASE_URL = `https://${PROJECT_ID}.supabase.co/functions/v1/make-server-cfc8313f`;
+
+        function log(msg) {
+            console.log(msg);
+            const diag = document.getElementById('diagnostics');
+            diag.innerHTML += `<p style="margin: 5px 0; padding: 5px; background: #0f172a; border-radius: 3px;">${new Date().toLocaleTimeString()}: ${msg}</p>`;
+        }
+
+        async function testHealth() {
+            const resultDiv = document.getElementById('healthResult');
+            resultDiv.innerHTML = '<p class="info">Testing...</p>';
+            
+            log('Starting health check...');
+            
+            try {
+                const url = `${BASE_URL}/health`;
+                log(`Calling: ${url}`);
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${ANON_KEY}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                log(`Response status: ${response.status} ${response.statusText}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                log('Health check successful!');
+                
+                resultDiv.innerHTML = `
+                    <div class="status ok">✅ SUCCESS</div>
+                    <div class="result success">${JSON.stringify(data, null, 2)}</div>
+                    <div class="info">
+                        <p><strong>Environment Status:</strong></p>
+                        <p>• SUPABASE_URL: ${data.env?.hasSupabaseUrl ? '✅ SET' : '❌ NOT SET'}</p>
+                        <p>• SERVICE_ROLE_KEY: ${data.env?.hasServiceKey ? '✅ SET' : '❌ NOT SET'}</p>
+                        ${!data.env?.hasSupabaseUrl || !data.env?.hasServiceKey ? 
+                            '<p style="color: #fca5a5; margin-top: 10px;">⚠️ Environment variables missing! See /ENVIRONMENT-SETUP-REQUIRED.md</p>' : 
+                            '<p style="color: #6ee7b7; margin-top: 10px;">✅ Backend is properly configured!</p>'
+                        }
+                    </div>
+                `;
+
+            } catch (error) {
+                log(`Health check failed: ${error.message}`);
+                
+                resultDiv.innerHTML = `
+                    <div class="status fail">❌ FAILED</div>
+                    <div class="result error">Error: ${error.message}</div>
+                    <div class="info">
+                        <p><strong>Possible causes:</strong></p>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Edge function not deployed yet</li>
+                            <li>Function name incorrect (should be: make-server-cfc8313f)</li>
+                            <li>Network/CORS issue</li>
+                            <li>Supabase project inactive</li>
+                        </ul>
+                        <p><strong>Next steps:</strong></p>
+                        <ol style="margin: 10px 0; padding-left: 20px;">
+                            <li>Go to Supabase Dashboard → Edge Functions</li>
+                            <li>Verify "make-server-cfc8313f" exists and is deployed</li>
+                            <li>Check the function logs for errors</li>
+                            <li>Ensure function code is deployed from /supabase/functions/server/</li>
+                        </ol>
+                    </div>
+                `;
+            }
+        }
+
+        async function testSignup() {
+            const resultDiv = document.getElementById('signupResult');
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                resultDiv.innerHTML = '<div class="result error">Please fill in email and password</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<p class="info">Testing signup...</p>';
+            log('Starting signup test...');
+            
+            try {
+                const url = `${BASE_URL}/auth/signup`;
+                const signupData = {
+                    email,
+                    password,
+                    name: 'Test User',
+                    role: 'citizen'
+                };
+
+                log(`Calling: ${url}`);
+                log(`Data: ${JSON.stringify(signupData, null, 2)}`);
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${ANON_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(signupData)
+                });
+
+                log(`Response status: ${response.status} ${response.statusText}`);
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || `HTTP ${response.status}`);
+                }
+
+                log('Signup successful!');
+                
+                resultDiv.innerHTML = `
+                    <div class="status ok">✅ SUCCESS</div>
+                    <div class="result success">${JSON.stringify(data, null, 2)}</div>
+                    <div class="info">
+                        <p>✅ User created successfully!</p>
+                        <p>User ID: <code>${data.user?.id}</code></p>
+                        <p>Email: <code>${data.user?.email}</code></p>
+                    </div>
+                `;
+
+            } catch (error) {
+                log(`Signup failed: ${error.message}`);
+                
+                resultDiv.innerHTML = `
+                    <div class="status fail">❌ FAILED</div>
+                    <div class="result error">Error: ${error.message}</div>
+                    <div class="info">
+                        <p><strong>This usually means:</strong></p>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Environment variables not set (run health check first)</li>
+                            <li>User already exists (try different email)</li>
+                            <li>Edge function code has an error</li>
+                        </ul>
+                        <p>Check the Supabase Edge Function logs for detailed error information.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Auto-run health check on page load
+        window.addEventListener('load', () => {
+            log('Page loaded - ready to test');
+            setTimeout(() => {
+                log('Auto-running health check in 1 second...');
+                setTimeout(testHealth, 1000);
+            }, 100);
+        });
+    </script>
+</body>
+</html>

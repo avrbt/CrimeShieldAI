@@ -1,0 +1,1 @@
+export { HeatmapSection } from './HeatmapSectionWithGoogleMaps';

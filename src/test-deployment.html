@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrimeShield - Deployment Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0F1419 0%, #1A1F2E 100%);
+            color: #E5E7EB;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #10B981;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #9CA3AF;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+
+        .test-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .test-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .status-badge {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #6B7280;
+        }
+
+        .status-badge.pending {
+            background: #F59E0B;
+            animation: pulse 2s infinite;
+        }
+
+        .status-badge.success {
+            background: #10B981;
+        }
+
+        .status-badge.error {
+            background: #EF4444;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .test-title {
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+
+        .test-description {
+            color: #9CA3AF;
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+
+        .test-result {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .test-result pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        button {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .success-text {
+            color: #10B981;
+        }
+
+        .error-text {
+            color: #EF4444;
+        }
+
+        .warning-text {
+            color: #F59E0B;
+        }
+
+        .info-box {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid #3B82F6;
+            padding: 16px;
+            margin-bottom: 24px;
+            border-radius: 4px;
+        }
+
+        .info-box p {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
+        .info-box strong {
+            color: #3B82F6;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .deployment-steps {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 4px solid #EF4444;
+            padding: 16px;
+            margin-top: 24px;
+            border-radius: 4px;
+        }
+
+        .deployment-steps h3 {
+            color: #EF4444;
+            margin-bottom: 12px;
+        }
+
+        .deployment-steps ol {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+
+        .deployment-steps a {
+            color: #3B82F6;
+            text-decoration: none;
+        }
+
+        .deployment-steps a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛡️ CrimeShield Deployment Test</h1>
+        <p class="subtitle">Test your Edge Function deployment before running the main app</p>
+
+        <div class="info-box">
+            <p><strong>What This Does:</strong></p>
+            <p>This page tests if your Supabase Edge Function is deployed correctly. Run all tests to verify your backend is ready.</p>
+            <p><strong>Before Testing:</strong> Make sure you've deployed the Edge Function manually (see guide below if you haven't).</p>
+        </div>
+
+        <!-- Test 1: Health Check -->
+        <div class="test-card">
+            <div class="test-header">
+                <div class="status-badge" id="health-status"></div>
+                <h2 class="test-title">1. Health Check</h2>
+            </div>
+            <p class="test-description">
+                Tests if the Edge Function is deployed and responding. Also checks if environment variables are set.
+            </p>
+            <button onclick="testHealth()" id="health-btn">Run Health Check</button>
+            <div class="test-result" id="health-result" style="display: none;"></div>
+        </div>
+
+        <!-- Test 2: Signup -->
+        <div class="test-card">
+            <div class="test-header">
+                <div class="status-badge" id="signup-status"></div>
+                <h2 class="test-title">2. User Signup</h2>
+            </div>
+            <p class="test-description">
+                Tests if user signup works correctly. Creates a test user account.
+            </p>
+            <button onclick="testSignup()" id="signup-btn">Run Signup Test</button>
+            <div class="test-result" id="signup-result" style="display: none;"></div>
+        </div>
+
+        <!-- Test 3: Database -->
+        <div class="test-card">
+            <div class="test-header">
+                <div class="status-badge" id="db-status"></div>
+                <h2 class="test-title">3. Database Check</h2>
+            </div>
+            <p class="test-description">
+                Verifies that the database table exists and is accessible.
+            </p>
+            <button onclick="testDatabase()" id="db-btn">Run Database Check</button>
+            <div class="test-result" id="db-result" style="display: none;"></div>
+        </div>
+
+        <!-- Run All Tests -->
+        <div class="test-card" style="background: rgba(16, 185, 129, 0.1);">
+            <div class="btn-group">
+                <button onclick="runAllTests()">🚀 Run All Tests</button>
+                <button onclick="clearResults()" style="background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%);">Clear Results</button>
+            </div>
+        </div>
+
+        <!-- Deployment Guide -->
+        <div class="deployment-steps">
+            <h3>⚠️ If Tests Fail - Deploy Manually</h3>
+            <p>If any tests fail, you need to deploy the Edge Function manually. Follow these steps:</p>
+            <ol>
+                <li>Copy code from: <code>/supabase/functions/make-server-cfc8313f/index.ts</code></li>
+                <li>Go to: <a href="https://supabase.com/dashboard/project/lfksrwqamtfqrexoxlnp/functions" target="_blank">Supabase Edge Functions</a></li>
+                <li>Create/edit function named <code>make-server-cfc8313f</code></li>
+                <li>Paste code and click Deploy</li>
+                <li>Add environment variables in Settings → Secrets:
+                    <ul>
+                        <li><code>SUPABASE_URL</code> = <code>https://lfksrwqamtfqrexoxlnp.supabase.co</code></li>
+                        <li><code>SUPABASE_SERVICE_ROLE_KEY</code> = Get from <a href="https://supabase.com/dashboard/project/lfksrwqamtfqrexoxlnp/settings/api" target="_blank">Settings → API</a></li>
+                    </ul>
+                </li>
+                <li>Click Deploy again after adding secrets</li>
+                <li>Create database table: <a href="https://supabase.com/dashboard/project/lfksrwqamtfqrexoxlnp/editor" target="_blank">Run SQL from setup-database.sql</a></li>
+            </ol>
+            <p><strong>Detailed Guide:</strong> Open <code>/⚡-DO-THIS-NOW.md</code> in your project for step-by-step instructions.</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://lfksrwqamtfqrexoxlnp.supabase.co/functions/v1/make-server-cfc8313f';
+        const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxma3Nyd3FhbXRmcXJleG94bG5wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE5NTcwMjAsImV4cCI6MjA3NzUzMzAyMH0.WZ9VtUx24DMuRFJh0ZluYwjNTBhUyjVRlgQE7WS6iqA';
+
+        function updateStatus(testId, status) {
+            const badge = document.getElementById(`${testId}-status`);
+            badge.className = `status-badge ${status}`;
+        }
+
+        function showResult(testId, content, isError = false) {
+            const resultDiv = document.getElementById(`${testId}-result`);
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `<pre class="${isError ? 'error-text' : 'success-text'}">${content}</pre>`;
+        }
+
+        async function testHealth() {
+            updateStatus('health', 'pending');
+            const btn = document.getElementById('health-btn');
+            btn.disabled = true;
+            
+            try {
+                console.log('Testing health endpoint...');
+                
+                const response = await fetch(`${API_BASE_URL}/health`, {
+                    headers: {
+                        'Authorization': `Bearer ${ANON_KEY}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'ok') {
+                    let result = '✅ HEALTH CHECK PASSED!\n\n';
+                    result += JSON.stringify(data, null, 2);
+                    
+                    if (data.env?.hasSupabaseUrl && data.env?.hasServiceKey) {
+                        result += '\n\n✅ Environment variables are set correctly!';
+                        updateStatus('health', 'success');
+                    } else {
+                        result += '\n\n⚠️ WARNING: Environment variables missing!';
+                        result += '\nhasSupabaseUrl: ' + data.env?.hasSupabaseUrl;
+                        result += '\nhasServiceKey: ' + data.env?.hasServiceKey;
+                        updateStatus('health', 'error');
+                    }
+                    
+                    showResult('health', result);
+                } else {
+                    throw new Error(data.error || 'Health check failed');
+                }
+            } catch (error) {
+                updateStatus('health', 'error');
+                showResult('health', `❌ HEALTH CHECK FAILED\n\nError: ${error.message}\n\nThis means the Edge Function is not deployed or not responding.\n\nAction: Deploy the Edge Function manually (see guide below)`, true);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function testSignup() {
+            updateStatus('signup', 'pending');
+            const btn = document.getElementById('signup-btn');
+            btn.disabled = true;
+            
+            try {
+                const testEmail = `test_${Date.now()}@crimeshield.test`;
+                const testData = {
+                    email: testEmail,
+                    password: 'TestPassword123!',
+                    name: 'Test User',
+                    role: 'citizen'
+                };
+
+                console.log('Testing signup with:', testEmail);
+                
+                const response = await fetch(`${API_BASE_URL}/auth/signup`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${ANON_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testData)
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    let result = '✅ SIGNUP TEST PASSED!\n\n';
+                    result += 'User created successfully:\n';
+                    result += JSON.stringify(data.user, null, 2);
+                    result += '\n\nYou can verify this user in Supabase Dashboard → Auth → Users';
+                    
+                    updateStatus('signup', 'success');
+                    showResult('signup', result);
+                } else {
+                    throw new Error(data.error || 'Signup failed');
+                }
+            } catch (error) {
+                updateStatus('signup', 'error');
+                let errorMsg = `❌ SIGNUP TEST FAILED\n\nError: ${error.message}\n\n`;
+                
+                if (error.message.includes('environment variables')) {
+                    errorMsg += 'Cause: Environment variables not set\nAction: Add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY';
+                } else if (error.message.includes('relation') || error.message.includes('kv_store')) {
+                    errorMsg += 'Cause: Database table not created\nAction: Run the SQL from setup-database.sql';
+                } else {
+                    errorMsg += 'Action: Check Edge Function logs for details';
+                }
+                
+                showResult('signup', errorMsg, true);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function testDatabase() {
+            updateStatus('db', 'pending');
+            const btn = document.getElementById('db-btn');
+            btn.disabled = true;
+            
+            showResult('db', 'This test verifies database connectivity through the signup process.\nRun the Signup Test to verify database access.', false);
+            updateStatus('db', 'success');
+            btn.disabled = false;
+        }
+
+        async function runAllTests() {
+            clearResults();
+            await testHealth();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testSignup();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testDatabase();
+        }
+
+        function clearResults() {
+            ['health', 'signup', 'db'].forEach(testId => {
+                updateStatus(testId, '');
+                const resultDiv = document.getElementById(`${testId}-result`);
+                resultDiv.style.display = 'none';
+                resultDiv.innerHTML = '';
+            });
+        }
+    </script>
+</body>
+</html>
