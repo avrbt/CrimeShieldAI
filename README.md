@@ -112,7 +112,7 @@ This project is private and not yet licensed for public distribution.
 ---
 
 ## 👤 Author
-
+AVIRAL BAJPAI
 **avrbt** — [GitHub](https://github.com/avrbt)
 
 ---
